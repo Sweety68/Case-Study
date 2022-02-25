@@ -1,0 +1,227 @@
+***com.entity package and class Book***
+   =================================
+
+
+package com.entity;
+
+import java.io.Serializable;
+
+public class Book implements Serializable{
+
+	  private int bookId;
+	  private String booktitle;
+	  private float bookprice;
+	  private String bookgrade;
+	  //getters and setters method
+	public int getBookId() {
+		return bookId;
+	}
+	public void setBookId(int bookId) {
+		this.bookId = bookId;
+	}
+	public String getBooktitle() {
+		return booktitle;
+	}
+	public void setBooktitle(String booktitle) {
+		this.booktitle = booktitle;
+	}
+	public float getBookprice() {
+		return bookprice;
+	}
+	public void setBookprice(float bookprice) {
+		this.bookprice = bookprice;
+	}
+	public String getBookgrade() {
+		return bookgrade;
+	}
+	public void setBookgrade(String bookgrade) {
+		this.bookgrade = bookgrade;
+	}
+	  
+	  
+	
+	}
+
+
+**com.service package and class BookService**
+  =========================================
+
+package com.service;
+
+import com.dao.BookDAO;
+import com.entity.Book;
+
+public class BookService {
+	
+	public int addBookService(int bookId, String booktitle, float bookprice) {
+		String bookgrade="";
+		 if(bookprice <= 300)
+		 {
+			 bookgrade = "C";
+		 }
+		 else if(bookprice <= 600)
+		 {
+			 bookgrade = "B";
+		 }
+		 else
+		 {
+			 bookgrade = "A";
+		 }
+		
+		 BookDAO bDAO = new BookDAO();
+		 Book book = new Book(); 
+		 
+		 book.setBookId(bookId);
+		 book.setBooktitle(booktitle);
+		 book.setBookprice(bookprice);
+		 book.setBookgrade(bookgrade);
+		 
+		 int updateResult = 0;
+		 try
+		 {
+			 updateResult = bDAO.addBook(book);
+			 return updateResult; 
+		 }
+		 catch(Exception ex)
+		 {
+			 System.out.println(ex.toString());
+			 return 0;
+		 }
+	}
+
+}
+
+**com.dao package and BookDAO**
+  =========================== 
+
+package com.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+import com.entity.Book;
+
+
+public class BookDAO {
+	 public int addBook(Book book) 
+	  {	  Connection con = null;
+		  PreparedStatement pstmt = null;
+		  try
+		  {  
+			  con=BookDB.getConnection(); 
+			  
+			  String ins_str = "insert into book values(?,?,?,?)";    //insering values
+			 
+			  pstmt = con.prepareStatement(ins_str);
+			  pstmt.setInt(1,book.getBookId());                     //set values according to their fields
+			  pstmt.setString(2,book.getBooktitle());
+			  pstmt.setFloat(3,book.getBookprice());
+			  pstmt.setString(4,book.getBookgrade());
+			  int updateCount = pstmt.executeUpdate();  
+			       
+			  con.close();
+			  return updateCount;
+		  }
+		  catch(Exception ex)
+		  {
+			  System.out.println(ex.toString());
+			  return 0;
+		  }
+	  }
+    
+	  public ArrayList getBookDetailsById(int bookId)
+				throws Exception
+				{
+					Connection con = null;
+					PreparedStatement pstmt = null;
+					ResultSet rs = null;
+					
+					con = BookDB.getConnection();
+					
+			    String sel_str ="Select booktitle,bookprice from book where bookId=?";
+					  
+					  
+					  pstmt = con.prepareStatement(sel_str);
+					  pstmt.setInt(1,bookId);
+					  rs = pstmt.executeQuery();
+					  
+					  ArrayList result = new ArrayList();
+					  if(rs.next())
+					  {
+						  result.add(rs.getString(1));
+						  result.add(rs.getString(2));
+						  
+					  }
+					  else
+					  {
+						  result.add("Invalid Id");
+					  }
+					  return result;
+					
+				}
+}
+
+
+**com.dao package and BookDB**
+  ==========================
+
+package com.dao;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+
+public class BookDB {
+	
+	public static Connection getConnection() 
+			  throws Exception
+			  {
+				  /*Class.forName("com.mysql.jdbc.Driver");
+				  Connection  conn = DriverManager.getConnection(
+						  "jdbc:mysql://localhost:sweetyj68",
+						  "root",
+						  "root");*/
+				  
+				
+				 String driverName = "org.postgresql.Driver";    
+				  Class.forName(driverName);
+				  Connection conn = DriverManager.getConnection(
+				             "jdbc:postgresql://localhost/sweetyj68","postgres","Sweety0608@"
+				             		+  "");         //database connection
+				
+				return conn; 
+			  }
+
+}
+
+
+**com.ui package and class BookUI**
+  ===============================
+package com.ui;
+
+import java.util.Scanner;
+
+import com.service.BookService;
+
+public class BookUI {
+	public static void main(String[] args)  
+	{	int bookId=0;
+		String booktitle="";
+		float bookprice=0;
+		Scanner s=new Scanner(System.in);
+		System.out.println("Enter Book Id");
+			bookId = s.nextInt();
+			System.out.println("Enter Book Title");
+			booktitle = s.next();	
+			System.out.println("Enter Book price");
+			bookprice = s.nextFloat();
+			BookService bookService = new BookService();                                     //BookService class constructor
+			   int updateCount = bookService.addBookService(bookId, booktitle, bookprice);  //count of adding records
+			   
+			System.out.println("inserted "+updateCount+" record   Successfully ");
+		
+	}
+
+}
+
