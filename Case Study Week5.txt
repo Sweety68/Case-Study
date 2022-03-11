@@ -1,0 +1,302 @@
+****Package  com.pizzamanagement.dao****
+      ==============================
+JPAUtil.java  
+
+package com.pizzamanagement.dao;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
+public class JPAUtil {
+	
+	private static EntityManagerFactory factory;
+	private static EntityManager entityManager;
+	static {
+		factory = Persistence.createEntityManagerFactory("PIZZA");
+	}
+
+	public static EntityManager getEntityManger() {
+		if(entityManager==null || !entityManager.isOpen()) {
+			entityManager = factory.createEntityManager();
+		}
+		return entityManager;
+	}
+	
+}
+
+PizzaDao.java  
+package com.pizzamanagement.dao;
+
+import com.pizzamanagement.model.Pizza;
+
+public interface PizzaDao {
+	Pizza getPizzaByNo(int no);
+	
+	void addPizza(Pizza pizza);
+	
+	void updatePizza(Pizza pizza);
+	
+	void deletePizza(Pizza pizza);
+	
+	void commitTransaction();
+	void beginTransaction();
+	
+}
+
+PizzaDaoImpl.java
+package com.pizzamanagement.dao;
+
+import javax.persistence.EntityManager;
+
+import com.pizzamanagement.model.Pizza;
+
+public class PizzaDaoImpl implements PizzaDao {
+	private EntityManager entityManager;
+	public PizzaDaoImpl() {
+		entityManager=JPAUtil.getEntityManger();
+	}
+	@Override
+	public Pizza getPizzaByNo(int no) {
+		Pizza pizza = entityManager.find(Pizza.class, no);
+		return pizza;
+		
+	}
+	@Override
+	public void addPizza(Pizza pizza) {
+		entityManager.persist(pizza);
+		
+	}
+	@Override
+	public void updatePizza(Pizza pizza) {
+		entityManager.merge(pizza);
+		
+	}
+	@Override
+	public void deletePizza(Pizza pizza) {
+		entityManager.remove(pizza);
+		
+	}
+	@Override
+	public void commitTransaction() {
+		entityManager.getTransaction().commit();
+		
+	}
+	@Override
+	public void beginTransaction() {
+		entityManager.getTransaction().begin();
+		
+		
+	}
+}
+****package com.pizzamanagement.model****
+==========================================
+Pizza.java
+
+package com.pizzamanagement.model;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name="pizzalyrd")
+public class Pizza {
+	
+	@Id
+	private int pizzaNo;
+	private String pizzaType;
+	private int pizzaPrice;
+	private String DeliveryAdd;
+	
+	public int getPizzaNo() {
+		return pizzaNo;
+	}
+
+	public void setPizzaNo(int pizzaNo) {
+		this.pizzaNo = pizzaNo;
+	}
+
+	public String getPizzaType() {
+		return pizzaType;
+	}
+
+	public void setPizzaType(String pizzaType) {
+		this.pizzaType = pizzaType;
+	}
+
+	public int getPizzaPrice() {
+		return pizzaPrice;
+	}
+
+	public void setPizzaPrice(int pizzaPrice) {
+		this.pizzaPrice = pizzaPrice;
+	}
+
+	public String getDeliveryAdd() {
+		return DeliveryAdd;
+	}
+
+	public void setDeliveryAdd(String deliveryAdd) {
+		DeliveryAdd = deliveryAdd;
+	}
+
+	public Pizza() {
+		// TODO Auto-generated constructor stub
+	}
+
+	public Pizza(int pizzaNo, String pizzaType, int pizzaPrice, String deliveryAdd) {
+		super();
+		this.pizzaNo = pizzaNo;
+		this.pizzaType = pizzaType;
+		this.pizzaPrice = pizzaPrice;
+		DeliveryAdd = deliveryAdd;
+	}
+
+	@Override
+	public String toString() {
+		return "Pizza [pizzaNo=" + pizzaNo + ", pizzaType=" + pizzaType + ", pizzaPrice=" + pizzaPrice
+				+ ", DeliveryAdd=" + DeliveryAdd + "]";
+	}	
+}
+
+
+****Package com.pizzamanagement.service****
+=========================================
+
+PizzaService.java
+
+package com.pizzamanagement.service;
+
+import com.pizzamanagement.model.Pizza;
+
+public interface PizzaService {
+
+	 public void addPizza(Pizza pizza);
+	 
+	 public void updatePizza(Pizza pizza);
+	 
+	 public void deletePizza(Pizza pizza);
+	 
+	 Pizza findPizzaByNo(int no);
+}
+
+PizzaServiceImpl.java
+package com.pizzamanagement.service;
+
+import com.pizzamanagement.dao.PizzaDao;
+import com.pizzamanagement.dao.PizzaDaoImpl;
+import com.pizzamanagement.model.Pizza;
+
+public class PizzaServiceImpl implements PizzaService{
+		private PizzaDao dao;
+		public PizzaServiceImpl()
+		{
+			dao= new PizzaDaoImpl();
+		}
+		
+
+		@Override
+		public void addPizza(Pizza pizza) {
+			dao.beginTransaction();
+			dao.addPizza(pizza);
+			dao.commitTransaction();
+			
+		}
+
+		@Override
+		public void updatePizza(Pizza pizza) {
+			dao.beginTransaction();
+			dao.updatePizza(pizza);
+			dao.commitTransaction();
+			
+			
+		}
+
+		@Override
+		public void deletePizza(Pizza pizza) {
+			dao.beginTransaction();
+			dao.deletePizza(pizza);
+			dao.commitTransaction();
+			
+		}
+
+		@Override
+		public Pizza findPizzaByNo(int no) {
+			Pizza pizza=dao.getPizzaByNo(no);
+			return pizza;
+		}
+}
+
+****Package com.pizzamanagement.ui****
+=====================================
+Test.java
+package com.pizzamanagement.ui;
+
+import com.pizzamanagement.model.Pizza;
+import com.pizzamanagement.service.PizzaService;
+import com.pizzamanagement.service.PizzaServiceImpl;
+
+public class Test {
+  public static void main(String[] args) {
+	  PizzaService service= new PizzaServiceImpl();
+		Pizza pizza= new Pizza(111, "OTC", 200, "india");
+		//ADD VALUES TO DATABASE
+    	service.addPizza(pizza);
+//		pizza=service.findPizzaByNo(111);
+//		System.out.println("pizza no :" +pizza.getPizzaNo());
+//		System.out.println("pizza type :"+pizza.getPizzaType());
+//  	System.out.println("pizza price :"+pizza.getPizzaPrice());
+		
+		
+  	// UPDATE VALUES TO DATABASE
+//  	pizza.setPizzaType("cheese pizza");
+//	    pizza.setPizzaNo(222);
+//		pizza.setPizzaPrice(300);
+//		
+//		service.updatePizza(pizza);
+//		
+//		 pizza=service.findPizzaByNo(111);
+//		System.out.println("updated type:"+pizza.PizzaType());
+//		System.out.println("updated no:"+pizza.PizzaNo());
+//		System.out.println("updated price:"+pizza.PizzaPrice());
+		
+		// DELETE
+		//service.deletePizza(pizza);
+		//System.out.println("end of program");
+	}
+
+}
+
+****META-INF****
+==============
+Persistence.xml
+<?xml version="1.0" encoding="UTF-8"?>
+
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
+                      http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+  version="2.0">
+  
+	<persistence-unit name="PIZZA" transaction-type="RESOURCE_LOCAL">
+	
+		<provider>org.hibernate.ejb.HibernatePersistence</provider>
+		<class>com.pizzamanagement.model.Pizza</class>
+
+		<properties>
+		<!-- database properties -->
+			<property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost/pizza" />
+			<property name="javax.persistence.jdbc.user" value="postgres" />
+			<property name="javax.persistence.jdbc.password" value="Sweety0608@" />
+			<property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
+			
+			<!-- hibernate properties -->
+			<property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+			<property name="hibernate.hbm2ddl.auto" value="create"/> <!-- create/update  -->
+			<property name="hibernate.show_sql" value="true"/>
+		</properties>
+		
+	</persistence-unit>
+	
+</persistence>
+
+ 
